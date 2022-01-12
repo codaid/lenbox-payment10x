@@ -29,7 +29,6 @@ function lenbox_payment_10x_init()
 {
 	if (class_exists('WC_Payment_Gateway')) {
 		require_once plugin_dir_path(__FILE__) . '/includes/class-wc-payment-10x-gateway-lenbox.php';
-		require_once plugin_dir_path(__FILE__) . '/includes/lenbox-order-statuses.php';
 		require_once plugin_dir_path(__FILE__) . '/includes/lenbox-10x-add-description-price.php';
 		if (!function_exists('lenbox_payment_4x_init')) {
 			require_once plugin_dir_path(__FILE__) . '/includes/codaid-lenbox-webhook.php';

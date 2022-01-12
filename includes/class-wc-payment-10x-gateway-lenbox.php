@@ -32,6 +32,7 @@ class WC_Gateway_Lenbox_10x extends WC_Payment_Gateway
 		$this->authkey				= $this->get_option('authkey');
 		$this->vd					= $this->get_option('vd');
 		$this->url_api				= $this->get_option('url_api');
+		$this->minimum				= $this->get_option('minimum');
 		$this->instructions			= $this->get_option('instructions');
 		$this->enable_for_methods	= $this->get_option('enable_for_methods', array());
 		$this->enable_for_virtual	= $this->get_option('enable_for_virtual', 'yes') === 'yes';
@@ -55,6 +56,7 @@ class WC_Gateway_Lenbox_10x extends WC_Payment_Gateway
 		$this->authkey				= __('Entrer le authkey', 'codaid-lenbox-woo');
 		$this->vd					= __('Entrer le vd', 'codaid-lenbox-woo');
 		$this->url_api				= __('Entrer l\'url de l\'api', 'codaid-lenbox-woo');
+		$this->minimum				= __('Montant minimum', 'codaid-lenbox-woo');
 		$this->method_description	= __('Payer en 10x par lenbox.', 'codaid-lenbox-woo');
 		$this->has_fields			= false;
 	}
@@ -89,6 +91,13 @@ class WC_Gateway_Lenbox_10x extends WC_Payment_Gateway
 			'vd'				=> array(
 				'title'			=> __('VD', 'woocommerce'),
 				'description'	=> __('Entrer le VD fournis par Lenbox', 'woocommerce'),
+				'type'			=> 'text',
+				'default'		=> '',
+				'desc_type'		=> true
+			),
+			'minimum'			=> array(
+				'title'			=> __('Montant_minimum', 'woocommerce'),
+				'description'	=> __('Montant minimum', 'woocommerce'),
 				'type'			=> 'text',
 				'default'		=> '',
 				'desc_type'		=> true
@@ -145,6 +154,11 @@ class WC_Gateway_Lenbox_10x extends WC_Payment_Gateway
 	{
 		$order          = null;
 		$needs_shipping = false;
+
+		// Check minimum amount
+		if (WC()->cart->get_total('edit') < $this->minimum) {
+			return false;
+		}
 
 		// Test if shipping is needed first.
 		if (WC()->cart && WC()->cart->needs_shipping()) {
@@ -384,10 +398,10 @@ class WC_Gateway_Lenbox_10x extends WC_Payment_Gateway
 		curl_close($ch);
 
 		if ($response['response']['message'] === "Request successful") {
-			$order->update_status(apply_filters('woocommerce_lenbox_process_payment_order_status', 'wc-lenbox-processing', $order), __('Lenbox attente.\n', 'woocommerce'));
+			$order->update_status(apply_filters('woocommerce_lenbox10x_process_payment_order_status', 'on-hold', $order), __('Attente de paiement de Lenbox.', 'codaid-lenbox-woo'));
 			return $response['response']['url'];
 		} else {
-			$order->update_status(apply_filters('woocommerce_lenbox_process_payment_order_status', 'wc-lenbox-error', $order), __('Erreur lenbox.\n', 'codaid-lenbox-woo'));
+			$order->update_status(apply_filters('woocommerce_lenbox10x_process_payment_order_status', 'failed', $order), __('Erreur de génération du lien de paiement Lenbox.', 'codaid-lenbox-woo'));
 			exit;
 			return $this->get_return_url($order);
 		}
